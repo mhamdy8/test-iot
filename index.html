@@ -1,285 +1,765 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Firebase Relay Control Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background-color: #f9f9f9;
-      margin: 0;
-      padding: 0 10px 40px;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      justify-content: space-between;
-    }
-    h1 {
-      margin-top: 30px;
-      font-size: 1.8rem;
-    }
-    .relay-card {
-      display: inline-block;
-      background-color: white;
-      padding: 20px;
-      margin: 15px;
-      border-radius: 15px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      width: 220px;
-      vertical-align: top;
-    }
-    .relay-card h2 {
-      margin-bottom: 10px;
-      font-size: 1.3rem;
-    }
-    .relay-card p {
-      margin-bottom: 10px;
-      font-size: 1rem;
-    }
-    .relay-card button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 10px;
-      color: white;
-      background-color: blue;
-      cursor: pointer;
-      font-size: 16px;
-      width: 90%;
-      transition: opacity 0.3s ease;
-    }
-    .relay-card button:hover {
-      opacity: 0.8;
-    }
-    #allOffBtn, #logoutBtn {
-      max-width: 300px;
-      width: 90%;
-      padding: 12px 25px;
-      font-size: 16px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      margin: 15px auto;
-      display: block;
-      color: white;
-      transition: opacity 0.3s ease;
-    }
-    #allOffBtn {
-      background-color: #d32f2f;
-    }
-    #allOffBtn:hover {
-      opacity: 0.8;
-    }
-    #logoutBtn {
-      background-color: #555;
-    }
-    #logoutBtn:hover {
-      opacity: 0.8;
-    }
-
-    #dashboard {
-      display: none;
-    }
-    #loginForm {
-      max-width: 400px;
-      margin: 80px auto 20px;
-      background: white;
-      padding: 30px 20px;
-      border-radius: 15px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-    #loginForm input {
-      width: 100%;
-      padding: 12px 15px;
-      margin: 10px 0 20px;
-      font-size: 1rem;
-      border: 1.5px solid #ccc;
-      border-radius: 10px;
-      box-sizing: border-box;
-      outline-offset: 2px;
-      transition: border-color 0.3s ease;
-    }
-    #loginForm input:focus {
-      border-color: #1e88e5;
-    }
-    #loginForm button {
-      width: 100%;
-      background-color: #1e88e5;
-      color: white;
-      padding: 12px;
-      font-size: 18px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    #loginForm button:hover {
-      background-color: #1565c0;
-    }
-    #dashboard .relay-container {
-      max-width: 960px;
-      margin: 20px auto 0;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    @media (max-width: 700px) {
-      .relay-card {
-        width: 90%;
-        margin: 10px auto;
-        display: block;
-      }
-      body {
-        padding: 0 10px 60px;
-      }
-    }
-    footer {
-      font-size: 0.9rem;
-      color: #666;
-      padding: 10px 0;
-      margin-top: 40px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Lamp Control with Firebase</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #2a4e6c);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .firebase-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+        
+        .firebase-status i {
+            margin-right: 5px;
+        }
+        
+        .firebase-connected {
+            color: #4caf50;
+        }
+        
+        .firebase-disconnected {
+            color: #f44336;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #00c9ff, #92fe9d);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .card-header i {
+            font-size: 1.8rem;
+            margin-right: 15px;
+            background: linear-gradient(135deg, #00c9ff, #92fe9d);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .card-header h2 {
+            font-size: 1.5rem;
+        }
+        
+        .lamp-control {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+        
+        .lamp-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .lamp-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .lamp-on .lamp-icon {
+            background: linear-gradient(135deg, #00c9ff, #92fe9d);
+            box-shadow: 0 0 15px rgba(0, 201, 255, 0.5);
+        }
+        
+        .lamp-on .lamp-icon i {
+            color: #fff;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+        }
+        
+        .lamp-name {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #444;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background: linear-gradient(135deg, #00c9ff, #92fe9d);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+        
+        .scheduler {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        select, input[type="time"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            font-size: 1rem;
+        }
+        
+        .days-selector {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        
+        .day-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .day-option input {
+            margin-bottom: 5px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #00c9ff, #92fe9d);
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 201, 255, 0.4);
+        }
+        
+        .btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .schedule-display {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .schedule-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .schedule-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .firebase-config {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .firebase-config h3 {
+            margin-bottom: 10px;
+            color: #00c9ff;
+        }
+        
+        .firebase-config p {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        .config-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .config-inputs input {
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            width: 100%;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .days-selector {
+                flex-wrap: wrap;
+            }
+            
+            .day-option {
+                width: 25%;
+                margin-bottom: 10px;
+            }
+            
+            .firebase-status {
+                position: static;
+                margin: 10px auto;
+                width: fit-content;
+            }
+        }
+    </style>
 </head>
 <body>
-
-  <h1>Firebase Relay Control Dashboard</h1>
-
-  <!-- Login form -->
-  <div id="loginForm">
-    <input type="email" id="email" placeholder="Enter Email" required />
-    <input type="password" id="password" placeholder="Enter Password" required />
-    <button id="loginBtn">Login</button>
-  </div>
-
-  <!-- Dashboard -->
-  <div id="dashboard">
-    <div class="relay-container">
-      <div class="relay-card">
-        <h2>Relay 1</h2>
-        <p>Status: <span id="status1">Loading...</span></p>
-        <button id="btn1">Toggle</button>
-      </div>
-
-      <div class="relay-card">
-        <h2>Relay 2</h2>
-        <p>Status: <span id="status2">Loading...</span></p>
-        <button id="btn2">Toggle</button>
-      </div>
-
-      <div class="relay-card">
-        <h2>Relay 3</h2>
-        <p>Status: <span id="status3">Loading...</span></p>
-        <button id="btn3">Toggle</button>
-      </div>
-
-      <div class="relay-card">
-        <h2>Relay 4</h2>
-        <p>Status: <span id="status4">Loading...</span></p>
-        <button id="btn4">Toggle</button>
-      </div>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-lightbulb"></i> IoT Lamp Controller with Firebase</h1>
+            <p class="subtitle">Control your lamps and manage schedules with real-time Firebase storage</p>
+            <div class="firebase-status" id="firebase-status">
+                <i class="fas fa-circle firebase-disconnected"></i>
+                <span>Disconnected from Firebase</span>
+            </div>
+        </header>
+        
+        <div class="dashboard">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-sliders-h"></i>
+                    <h2>Lamp Control</h2>
+                </div>
+                
+                <div class="lamp-control">
+                    <div class="lamp-info">
+                        <div class="lamp-icon">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <div class="lamp-name">Living Room Lamp</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="lamp1-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="lamp-control">
+                    <div class="lamp-info">
+                        <div class="lamp-icon">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <div class="lamp-name">Bedroom Lamp</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="lamp2-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="firebase-config">
+                    <h3><i class="fas fa-database"></i> Firebase Configuration</h3>
+                    <p>Enter your Firebase project configuration to connect:</p>
+                    <div class="config-inputs">
+                        <input type="text" id="apiKey" placeholder="API Key">
+                        <input type="text" id="authDomain" placeholder="Auth Domain">
+                        <input type="text" id="databaseURL" placeholder="Database URL">
+                        <input type="text" id="projectId" placeholder="Project ID">
+                    </div>
+                    <button class="btn" id="connect-btn">
+                        <i class="fas fa-plug"></i> Connect to Firebase
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <i class="far fa-clock"></i>
+                    <h2>Scheduling</h2>
+                </div>
+                
+                <div class="scheduler">
+                    <div class="form-group">
+                        <label for="lamp-select">Select Lamp:</label>
+                        <select id="lamp-select" class="form-control">
+                            <option value="lamp1">Living Room Lamp</option>
+                            <option value="lamp2">Bedroom Lamp</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="start-time">Start Time:</label>
+                        <input type="time" id="start-time">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="end-time">End Time:</label>
+                        <input type="time" id="end-time">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Days:</label>
+                        <div class="days-selector">
+                            <div class="day-option">
+                                <input type="checkbox" id="mon" value="mon">
+                                <label for="mon">Mon</label>
+                            </div>
+                            <div class="day-option">
+                                <input type="checkbox" id="tue" value="tue">
+                                <label for="tue">Tue</label>
+                            </div>
+                            <div class="day-option">
+                                <input type="checkbox" id="wed" value="wed">
+                                <label for="wed">Wed</label>
+                            </div>
+                            <div class="day-option">
+                                <input type="checkbox" id="thu" value="thu">
+                                <label for="thu">Thu</label>
+                            </div>
+                            <div class="day-option">
+                                <input type="checkbox" id="fri" value="fri">
+                                <label for="fri">Fri</label>
+                            </div>
+                            <div class="day-option">
+                                <input type="checkbox" id="sat" value="sat">
+                                <label for="sat">Sat</label>
+                            </div>
+                            <div class="day-option">
+                                <input type="checkbox" id="sun" value="sun">
+                                <label for="sun">Sun</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn" id="add-schedule" disabled>
+                        <i class="fas fa-plus-circle"></i> Add Schedule
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <i class="far fa-calendar-alt"></i>
+                    <h2>Active Schedules</h2>
+                </div>
+                
+                <div class="schedule-display" id="schedule-list">
+                    <p>Connect to Firebase to manage schedules</p>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>IoT Lamp Control System | Firebase Integration | Designed for Easy Home Automation</p>
+        </footer>
     </div>
 
-    <button id="allOffBtn">All OFF</button>
-    <button id="logoutBtn">Logout</button>
-  </div>
-
-  <footer>
-    Created by Tech StudyCell
-  </footer>
-
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-
-  <script>
-    // Firebase config
-    const firebaseConfig = {
-	  apiKey: "AIzaSyCQc3bGCWYMrWNNNxyPER7hiWWWq0CSwPP",
-	  authDomain: "nodemcu-relay-02.firebaseapp.com",
-	  databaseURL: "https://nodemcu-relay-02-default-rtdb.firebaseio.com",
-	  projectId: "nodemcu-relay-03",
-	  storageBucket: "nodemcu-relay-02.firebasestorage.app",
-	  messagingSenderId: "573546025557",
-	  appId: "1:583546025557:web:e52002c52b86267bd58888"
-	};
-
-    firebase.initializeApp(firebaseConfig);
-
-    const loginForm = document.getElementById("loginForm");
-    const dashboard = document.getElementById("dashboard");
-    const loginBtn = document.getElementById("loginBtn");
-
-    loginBtn.addEventListener("click", () => {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-
-      if (!email || !password) {
-        alert("Please enter email and password.");
-        return;
-      }
-
-      firebase.auth().signInWithEmailAndPassword(email, password)
-        .then(userCredential => {
-          console.log("Signed in as", userCredential.user.email);
-          loginForm.style.display = "none";
-          dashboard.style.display = "block";
-          startRelayControl();
-        })
-        .catch(error => {
-          alert("Login failed: " + error.message);
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Firebase configuration
+            let firebaseConfig = {
+                apiKey: "",
+                authDomain: "",
+                databaseURL: "",
+                projectId: ""
+            };
+            
+            // Firebase app instance
+            let firebaseApp = null;
+            let database = null;
+            
+            // UI elements
+            const firebaseStatus = document.getElementById('firebase-status');
+            const connectBtn = document.getElementById('connect-btn');
+            const lamp1Toggle = document.getElementById('lamp1-toggle');
+            const lamp2Toggle = document.getElementById('lamp2-toggle');
+            const lampIcons = document.querySelectorAll('.lamp-icon');
+            const addScheduleBtn = document.getElementById('add-schedule');
+            const scheduleList = document.getElementById('schedule-list');
+            
+            // Schedule form elements
+            const lampSelect = document.getElementById('lamp-select');
+            const startTime = document.getElementById('start-time');
+            const endTime = document.getElementById('end-time');
+            const dayCheckboxes = document.querySelectorAll('.days-selector input[type="checkbox"]');
+            
+            // Configuration inputs
+            const apiKeyInput = document.getElementById('apiKey');
+            const authDomainInput = document.getElementById('authDomain');
+            const databaseURLInput = document.getElementById('databaseURL');
+            const projectIdInput = document.getElementById('projectId');
+            
+            // Initialize Firebase
+            function initializeFirebase() {
+                try {
+                    // Get configuration from inputs
+                    firebaseConfig = {
+                        apiKey: apiKeyInput.value,
+                        authDomain: authDomainInput.value,
+                        databaseURL: databaseURLInput.value,
+                        projectId: projectIdInput.value
+                    };
+                    
+                    // Initialize Firebase
+                    firebaseApp = firebase.initializeApp(firebaseConfig);
+                    database = firebase.database();
+                    
+                    // Update UI
+                    updateFirebaseStatus(true);
+                    addScheduleBtn.disabled = false;
+                    
+                    // Initialize lamp states
+                    initLampStates();
+                    
+                    // Initialize schedules
+                    initSchedules();
+                    
+                    console.log("Firebase initialized successfully!");
+                } catch (error) {
+                    console.error("Firebase initialization error:", error);
+                    updateFirebaseStatus(false);
+                    alert("Failed to connect to Firebase. Please check your configuration.");
+                }
+            }
+            
+            // Update Firebase connection status UI
+            function updateFirebaseStatus(connected) {
+                const statusIcon = firebaseStatus.querySelector('i');
+                const statusText = firebaseStatus.querySelector('span');
+                
+                if (connected) {
+                    statusIcon.className = "fas fa-circle firebase-connected";
+                    statusText.textContent = "Connected to Firebase";
+                    firebaseStatus.style.background = "rgba(76, 175, 80, 0.2)";
+                } else {
+                    statusIcon.className = "fas fa-circle firebase-disconnected";
+                    statusText.textContent = "Disconnected from Firebase";
+                    firebaseStatus.style.background = "rgba(244, 67, 54, 0.2)";
+                }
+            }
+            
+            // Initialize lamp states from Firebase
+            function initLampStates() {
+                // Reference to lamp states in Firebase
+                const lampStatesRef = database.ref('lamps');
+                
+                // Listen for value changes
+                lampStatesRef.on('value', (snapshot) => {
+                    const lampStates = snapshot.val() || {};
+                    
+                    // Update lamp 1 state
+                    if (lampStates.lamp1 !== undefined) {
+                        lamp1Toggle.checked = lampStates.lamp1;
+                        updateLampStatus(1, lampStates.lamp1);
+                    }
+                    
+                    // Update lamp 2 state
+                    if (lampStates.lamp2 !== undefined) {
+                        lamp2Toggle.checked = lampStates.lamp2;
+                        updateLampStatus(2, lampStates.lamp2);
+                    }
+                });
+                
+                // Set up toggle event listeners
+                lamp1Toggle.addEventListener('change', function() {
+                    updateLampStateInFirebase('lamp1', this.checked);
+                });
+                
+                lamp2Toggle.addEventListener('change', function() {
+                    updateLampStateInFirebase('lamp2', this.checked);
+                });
+            }
+            
+            // Update lamp state in Firebase
+            function updateLampStateInFirebase(lampId, state) {
+                if (!database) return;
+                
+                database.ref('lamps/' + lampId).set(state)
+                    .then(() => console.log(`${lampId} state updated to ${state}`))
+                    .catch(error => console.error(`Error updating ${lampId}:`, error));
+            }
+            
+            // Update lamp visual status
+            function updateLampStatus(lampNum, isOn) {
+                const lampIndex = lampNum - 1;
+                if (isOn) {
+                    lampIcons[lampIndex].classList.add('lamp-on');
+                } else {
+                    lampIcons[lampIndex].classList.remove('lamp-on');
+                }
+            }
+            
+            // Initialize schedules from Firebase
+            function initSchedules() {
+                const schedulesRef = database.ref('schedules');
+                
+                schedulesRef.on('value', (snapshot) => {
+                    const schedules = snapshot.val() || {};
+                    renderSchedules(schedules);
+                });
+            }
+            
+            // Render schedules
+            function renderSchedules(schedules) {
+                if (!schedules || Object.keys(schedules).length === 0) {
+                    scheduleList.innerHTML = '<p>No schedules added yet. Create one above!</p>';
+                    return;
+                }
+                
+                scheduleList.innerHTML = '';
+                
+                Object.keys(schedules).forEach(key => {
+                    const schedule = schedules[key];
+                    const scheduleItem = document.createElement('div');
+                    scheduleItem.className = 'schedule-item';
+                    scheduleItem.dataset.id = key;
+                    
+                    const lampName = schedule.lamp === 'lamp1' ? 'Living Room' : 'Bedroom';
+                    const days = schedule.days.map(day => day.charAt(0).toUpperCase() + day.slice(1, 3)).join(', ');
+                    
+                    scheduleItem.innerHTML = `
+                        <div>
+                            <strong>${lampName} Lamp</strong>
+                            <div>${schedule.start} - ${schedule.end}</div>
+                            <div>${days}</div>
+                        </div>
+                        <button class="delete-btn" data-id="${key}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+                    
+                    scheduleList.appendChild(scheduleItem);
+                });
+                
+                // Add event listeners to delete buttons
+                document.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        deleteSchedule(id);
+                    });
+                });
+            }
+            
+            // Add new schedule to Firebase
+            function addSchedule() {
+                const lamp = lampSelect.value;
+                const start = startTime.value;
+                const end = endTime.value;
+                
+                if (!start || !end) {
+                    alert('Please select both start and end times');
+                    return;
+                }
+                
+                // Get selected days
+                const selectedDays = [];
+                dayCheckboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        selectedDays.push(checkbox.value);
+                    }
+                });
+                
+                if (selectedDays.length === 0) {
+                    alert('Please select at least one day');
+                    return;
+                }
+                
+                // Create new schedule object
+                const newSchedule = {
+                    lamp: lamp,
+                    start: start,
+                    end: end,
+                    days: selectedDays
+                };
+                
+                // Push to Firebase
+                database.ref('schedules').push(newSchedule)
+                    .then(() => {
+                        console.log('Schedule added to Firebase');
+                        // Reset form
+                        startTime.value = '';
+                        endTime.value = '';
+                        dayCheckboxes.forEach(checkbox => checkbox.checked = false);
+                    })
+                    .catch(error => {
+                        console.error('Error adding schedule:', error);
+                        alert('Failed to add schedule to Firebase');
+                    });
+            }
+            
+            // Delete schedule from Firebase
+            function deleteSchedule(id) {
+                database.ref('schedules/' + id).remove()
+                    .then(() => console.log(`Schedule ${id} deleted`))
+                    .catch(error => console.error('Error deleting schedule:', error));
+            }
+            
+            // Set current time as default
+            const now = new Date();
+            startTime.value = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            endTime.value = `${(now.getHours() + 1).toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            // Event listeners
+            connectBtn.addEventListener('click', initializeFirebase);
+            addScheduleBtn.addEventListener('click', addSchedule);
         });
-    });
-
-    function startRelayControl() {
-      const db = firebase.database();
-
-      const relays = [
-        { id: 1, path: "relay1" },
-        { id: 2, path: "relay2" },
-        { id: 3, path: "relay3" },
-        { id: 4, path: "relay4" },
-      ];
-
-      relays.forEach(relay => {
-        const statusText = document.getElementById(`status${relay.id}`);
-        const toggleButton = document.getElementById(`btn${relay.id}`);
-        const relayRef = db.ref("/" + relay.path);
-
-        relayRef.on("value", (snapshot) => {
-          const state = snapshot.val();
-          statusText.innerText = state ? "ON" : "OFF";
-          toggleButton.style.backgroundColor = state ? "green" : "blue";
-        });
-
-        toggleButton.onclick = () => {
-          relayRef.get().then(snap => {
-            relayRef.set(!snap.val());
-          });
-        };
-      });
-
-      document.getElementById("allOffBtn").onclick = () => {
-        relays.forEach(relay => {
-          db.ref("/" + relay.path).set(false);
-        });
-      };
-    }
-
-    document.getElementById("logoutBtn").onclick = () => {
-      firebase.auth().signOut()
-        .then(() => {
-          dashboard.style.display = "none";
-          loginForm.style.display = "block";
-          document.getElementById("email").value = "";
-          document.getElementById("password").value = "";
-        })
-        .catch(error => {
-          alert("Logout failed: " + error.message);
-        });
-    };
-  </script>
+    </script>
 </body>
 </html>
